@@ -1,0 +1,160 @@
+---
+title: "MTH6139 Time Series" 
+subtitle: "Coursework 1" 
+author: "Sumaya Osman" 
+date: "Spring term 2025" 
+output: 
+  html_document:
+    toc: true
+    toc_float: true
+    theme: spacelab 
+    highlight: tango
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+```{r, echo=FALSE}
+# This code will display the QMUL logo at the top right of the page
+# Do not change this code
+htmltools::img(src = knitr::image_uri("images/QMlogo.png"),
+               alt = 'logo',
+               style = 'position:absolute; top:0; right:0; padding:10px; width:20%;')
+```
+
+# Section 1: UK Lung Deaths
+
+
+## 1.1 About Dataset
+
+This data set is a total deaths from bronchitis, emphysema and asthma in
+the Uk from 1974-1979.
+
+The aim of this project is to use Meta's Prophet forecasting system to
+use historical data to predict future trends. I will also be identifying
+trends or seasonal patterns in Deaths from lung diseases.
+
+## 1.2 Linear Model
+
+We will firstly use the function `lm` to run a regression.
+
+```{r}
+#both sexes
+ldeaths.df=data.frame(
+    ds=zoo::as.yearmon(time(ldeaths)),
+    y=ldeaths
+)
+ds=zoo::as.yearmon(time(ldeaths))
+y=ldeaths
+model=lm(y~ds,data=ldeaths.df)
+summary(model)
+plot(ds,y,type="l")
+```
+
+From this plot we can clearly see a significant decrease in Lung disease
+from 1974 to 1979. The trend mainly shows a decrease in deaths however
+it does tend to rise and fall over the years.
+
+## Comparison between Men and Women
+
+```{R}
+fdeaths.df=data.frame(
+     ds=zoo::as.yearmon(time(fdeaths)),
+     y=fdeaths
+ )
+mdeaths.df=data.frame(
+     ds=zoo::as.yearmon(time(mdeaths)),
+     y=mdeaths
+ )
+
+#Men
+ds=zoo::as.yearmon(time(mdeaths))
+y=mdeaths
+model=lm(y~ds,data=mdeaths.df)
+summary(model)
+```
+
+From this summary, we can conclude that the predicted number of deaths decreases by around 70 each month.
+
+```{r}
+#Women
+ds1=zoo::as.yearmon(time(fdeaths))
+y1=fdeaths
+model1=lm(y1~ds1,data=fdeaths.df)
+summary(model1)
+```
+
+From this summary we can conclude that there is a predicted decrease of around 19 deaths each month. (lower than Male predicted decrease  <font size="2">💡).
+
+
+```{r}
+#Plots
+par(mfrow = c(1, 2))
+plot(fdeaths);lines(ds1,fitted(model1),type="l",col="red")
+plot(mdeaths);lines(ds,fitted(model),type="l",col="red")
+
+```
+
+The 2 plots highlight a clear difference between the number of deaths
+due to lung disease in men and women. Women had a significantly lower
+number of deaths in 1974 (around 900) and decreased to around 600 by
+1980. However Men in the UK started with a much higher figure (around
+2100 deaths) but eventually decreased to around 1400 deaths, which is
+still considerably higher than Women. This disparity could result from
+lifestyle difference, genetics or other contributing factors.
+
+# Section 2: Prophet forecasting
+
+We will now use Meta's forecasting system , prophet, using the dataset
+of total Deaths from both genders `ldeaths` for a period of 2 years, 4
+years, 8 years and 30 years.
+
+## 2.1 2 year Forecast
+```{r}
+
+ldeaths.df=data.frame(
+    ds=zoo::as.yearmon(time(ldeaths)),
+    y=ldeaths
+)
+m=prophet::prophet(ldeaths.df,yearly.seasonality=TRUE,weekly.seasonality=TRUE,daily.seasonality=TRUE)
+f=prophet::make_future_dataframe(m,periods=2,freq="year")
+p=predict(m,f)
+plot(m,p)
+```
+
+We can use the function `prophet_plot_components` to view the forecast broken down intro trend, weekly seasonality and yearly seasonality.
+
+```{r, warning=FALSE}
+prophet::prophet_plot_components(m, p)
+```
+The trend confirms the conclusion made by fitting a linear regression in section 2.1, that there has been mainly been a persistent decline in Deaths caused by various Lung Diseases in the UK. 
+
+```{r,warning=FALSE}
+prophet::dyplot.prophet(m, p)
+```
+
+This interactive plot allows for further specific exploration of the data at certain points in time.
+
+## 2.2 4 year Forecast
+```{r}
+f1=prophet::make_future_dataframe(m,periods=4,freq="year")
+p1=predict(m,f1)
+plot(m,p1)
+prophet::prophet_plot_components(m, p1)
+```
+
+## 2.3 8 year Forecast
+```{r}
+f2=prophet::make_future_dataframe(m,periods=8,freq="year")
+p2=predict(m,f2)
+plot(m,p2)
+```
+
+## 2.4 30 year Forecast
+```{r}
+f3=prophet::make_future_dataframe(m,periods=30,freq="year")
+p3=predict(m,f3)
+plot(m,p3)
+```
+
+It's clear from these forecasts that there is general decrease in total deaths in the UK. As we increase the Forecast period, we observe a more substantial drop in deaths, from which we can only assume that it will continue on this trend for the foreseeable future; indicating meaningful changes in societal norms (such as smoking) and quality of healthcare.

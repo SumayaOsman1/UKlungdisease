@@ -1,0 +1,36 @@
+library(help="datasets")
+data(package="USArrests")
+
+?Nile
+?AirPassengers
+data(package="Airpassengers")
+?UKLungDeaths
+Nile.df=data.frame(
+    ds=zoo::as.yearmon(time(Nile)),
+    y=Nile
+)
+m=prophet::prophet(Nile.df)
+f=prophet::make_future_dataframe(m,periods=2,freq="year")
+p=predict(m,f)
+plot(m,p)
+ds=zoo::as.yearmon(time(Nile))
+y=Nile
+plot(ds,y,type="l")
+
+ldeaths.df=data.frame(
+    ds=zoo::as.yearmon(time(ldeaths)),
+    y=ldeaths
+)
+?warning()
+?prophet
+m=prophet::prophet(ldeaths.df)
+f=prophet::make_future_dataframe(m,periods=2,freq="year")
+p=predict(m,f)
+plot(m,p)
+ds=zoo::as.yearmon(time(ldeaths))
+y=ldeaths
+plot(ds,y,type="l")
+par(mfrow = c(1, 2))
+plot(fdeaths)
+plot(mdeaths)
+plot(fdeaths,type="l")
